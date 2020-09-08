@@ -74,31 +74,31 @@ void setup() {
 }
 
 void loop() {
-  // Delay between measurements.
-  delay(delayMS);
-  // Get temperature event and print its value.
   sensors_event_t event;
   dht.temperature().getEvent(&event);
   float temperature = event.temperature;
-  if (isnan(temperature)) {
-    Serial.println(F("Error reading temperature!"));
-  }
-  else {
-    Serial.print(F("Temperature: "));
-    Serial.print(temperature);
-    Serial.println(F("°C"));
-  }
-  // Get humidity event and print its value.
   dht.humidity().getEvent(&event);
   float relative_humidity = event.relative_humidity;
-  if (isnan(relative_humidity)) {
-    Serial.println(F("Error reading humidity!"));
-  }
-  else {
-    Serial.print(F("Humidity: "));
-    Serial.print(relative_humidity);
-    Serial.println(F("%"));
-  }
+
+  // // Delay between measurements.
+  // delay(delayMS);
+
+  // if (isnan(temperature)) {
+  //   Serial.println(F("Error reading temperature!"));
+  // }
+  // else {
+  //   Serial.print(F("Temperature: "));
+  //   Serial.print(temperature);
+  //   Serial.println(F("°C"));
+  // }
+  // if (isnan(relative_humidity)) {
+  //   Serial.println(F("Error reading humidity!"));
+  // }
+  // else {
+  //   Serial.print(F("Humidity: "));
+  //   Serial.print(relative_humidity);
+  //   Serial.println(F("%"));
+  // }
 
   // WIFI server
   WiFiClient client = server.available();
