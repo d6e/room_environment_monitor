@@ -2,6 +2,7 @@
 #include <DHT.h>
 #include <DHT_U.h>
 #include <WiFi.h>
+#include <PMserial.h>
 
 #define DHTPIN 23
 
@@ -10,6 +11,7 @@
 //#define DHTTYPE    DHT22     // DHT 22 (AM2302)
 //#define DHTTYPE    DHT21     // DHT 21 (AM2301)
 
+SerialPM pms(PMSx003, Serial);  // PMSx003, RX, TX
 DHT_Unified dht(DHTPIN, DHTTYPE);
 
 uint32_t delayMS;
@@ -30,6 +32,8 @@ const long timeoutTime = 2000;
 
 void setup() {
   Serial.begin(9600);
+  pms.init();                   // config serial port
+
   // Connect to Wi-Fi network with SSID and password
   Serial.print("Connecting to ");
   Serial.println(ssid);
@@ -71,9 +75,17 @@ void setup() {
   Serial.println(F("------------------------------------"));
   // Set delay between sensor readings based on sensor details.
   delayMS = sensor.min_delay / 1000;
+
 }
 
 void loop() {
+  pms.read();                   // read the PM sensor
+
+  Serial.print(F("\nPM1.0 "));Serial.print(pms.pm01);Serial.print(F(", "));
+  Serial.print(F("PM2.5 "));Serial.print(pms.pm25);Serial.print(F(", "));
+  Serial.print(F("PM10 ")) ;Serial.print(pms.pm10);Serial.println(F(" [ug/m3]"));
+  // delay(10000);                 // wait for 10 seconds
+
   sensors_event_t event;
   dht.temperature().getEvent(&event);
   float temperature = event.temperature;
@@ -120,7 +132,7 @@ void loop() {
             // HTTP headers always start with a response code (e.g. HTTP/1.1 200 OK)
             // and a content-type so the client knows what's coming, then a blank line:
             if (header.indexOf("GET /metrics") >= 0) { // serve metrics page
-              client.println("HTTP/1.1 200 OK");
+              client.println(F("HTTP/1.1 200 OK"));
               client.println("Content-Type: text/plain; version=0.0.4; charset=utf-8");
               client.println();
               client.println("# HELP room_temperature The temperature from the sensor.");
@@ -129,6 +141,16 @@ void loop() {
               client.println("# HELP room_relative_humidity The humidity from the sensor.");
               client.println("# TYPE room_relative_humidity gauge");
               client.println(String("room_relative_humidity ") + String(relative_humidity));
+
+              client.println("# HELP room_pm01 The pm1.0 from the sensor.");
+              client.println("# TYPE room_pm01 guage");
+              client.println(String("room_pm01 ") + String(pms.pm01));
+              client.println("# HELP room_pm25 The pm2.5 from the sensor.");
+              client.println("# TYPE room_pm25 guage");
+              client.println(String("room_pm25 ") + String(pms.pm25));
+              client.println("# HELP room_pm10 The pm10 from the sensor.");
+              client.println("# TYPE room_pm10 guage");
+              client.println(String("room_pm10 ") + String(pms.pm10));
             } else { // serve index page
               client.println("HTTP/1.1 200 OK");
               client.println("Content-type:text/html");
