@@ -79,38 +79,7 @@ void setup() {
 }
 
 void loop() {
-  pms.read();                   // read the PM sensor
-
-  Serial.print(F("\nPM1.0 "));Serial.print(pms.pm01);Serial.print(F(", "));
-  Serial.print(F("PM2.5 "));Serial.print(pms.pm25);Serial.print(F(", "));
-  Serial.print(F("PM10 ")) ;Serial.print(pms.pm10);Serial.println(F(" [ug/m3]"));
-  // delay(10000);                 // wait for 10 seconds
-
-  sensors_event_t event;
-  dht.temperature().getEvent(&event);
-  float temperature = event.temperature;
-  dht.humidity().getEvent(&event);
-  float relative_humidity = event.relative_humidity;
-
-  // // Delay between measurements.
-  // delay(delayMS);
-
-  // if (isnan(temperature)) {
-  //   Serial.println(F("Error reading temperature!"));
-  // }
-  // else {
-  //   Serial.print(F("Temperature: "));
-  //   Serial.print(temperature);
-  //   Serial.println(F("°C"));
-  // }
-  // if (isnan(relative_humidity)) {
-  //   Serial.println(F("Error reading humidity!"));
-  // }
-  // else {
-  //   Serial.print(F("Humidity: "));
-  //   Serial.print(relative_humidity);
-  //   Serial.println(F("%"));
-  // }
+  delay(500);                 // wait for half second
 
   // WIFI server
   WiFiClient client = server.available();
@@ -132,38 +101,53 @@ void loop() {
             // HTTP headers always start with a response code (e.g. HTTP/1.1 200 OK)
             // and a content-type so the client knows what's coming, then a blank line:
             if (header.indexOf("GET /metrics") >= 0) { // serve metrics page
-              client.println(F("HTTP/1.1 200 OK"));
-              client.println("Content-Type: text/plain; version=0.0.4; charset=utf-8");
-              client.println();
-              client.println("# HELP room_temperature The temperature from the sensor.");
-              client.println("# TYPE room_temperature gauge");
-              client.println(String("room_temperature ") + String(temperature));
-              client.println("# HELP room_relative_humidity The humidity from the sensor.");
-              client.println("# TYPE room_relative_humidity gauge");
-              client.println(String("room_relative_humidity ") + String(relative_humidity));
+              pms.read();                   // read the PM sensor
 
-              client.println("# HELP room_pm01 The pm1.0 from the sensor.");
-              client.println("# TYPE room_pm01 guage");
-              client.println(String("room_pm01 ") + String(pms.pm01));
-              client.println("# HELP room_pm25 The pm2.5 from the sensor.");
-              client.println("# TYPE room_pm25 guage");
-              client.println(String("room_pm25 ") + String(pms.pm25));
-              client.println("# HELP room_pm10 The pm10 from the sensor.");
-              client.println("# TYPE room_pm10 guage");
-              client.println(String("room_pm10 ") + String(pms.pm10));
+              Serial.print(F("\nPM1.0 "));Serial.print(pms.pm01);Serial.print(F(", "));
+              Serial.print(F("PM2.5 "));Serial.print(pms.pm25);Serial.print(F(", "));
+              Serial.print(F("PM10 ")) ;Serial.print(pms.pm10);Serial.println(F(" [ug/m3]"));
+
+              sensors_event_t event;
+              dht.temperature().getEvent(&event);
+              float temperature = event.temperature;
+              dht.humidity().getEvent(&event);
+              float relative_humidity = event.relative_humidity;
+
+              client.println(F("HTTP/1.1 200 OK"));
+              client.println(F("Content-Encoding: identity"));
+              client.println(F("Content-Type: text/plain; version=0.0.4; charset=utf-8"));
+              client.println(F("Date: Wed, 16 Sep 2020 07:00:19 GMT"));
+              client.println();
+
+              client.print(F("# HELP room_temperature The temperature from the sensor.\n"));
+              client.print(F("# TYPE room_temperature gauge\n"));
+              client.print(String("room_temperature ") + String(temperature) + String("\n"));
+              client.print(F("# HELP room_relative_humidity The humidity from the sensor.\n"));
+              client.print(F("# TYPE room_relative_humidity gauge\n"));
+              client.print(String("room_relative_humidity ") + String(relative_humidity) + String("\n"));
+
+              client.print(F("# HELP room_pm01 The pm1.0 from the sensor.\n"));
+              client.print(F("# TYPE room_pm01 gauge\n"));
+              client.print(String("room_pm01 ") + String(pms.pm01) + String("\n"));
+              client.print(F("# HELP room_pm25 The pm2.5 from the sensor.\n"));
+              client.print(F("# TYPE room_pm25 gauge\n"));
+              client.print(String("room_pm25 ") + String(pms.pm25) + String("\n"));
+
+              client.print(F("# HELP room_pm10 The pm10 from the sensor.\n"));
+              client.print(F("# TYPE room_pm10 gauge\n"));
+              client.print(String("room_pm10 ") + String(pms.pm10) + String("\n"));
             } else { // serve index page
-              client.println("HTTP/1.1 200 OK");
-              client.println("Content-type:text/html");
-              client.println("Connection: close");
+              client.println(F("HTTP/1.1 200 OK"));
+              client.println(F("Content-type: text/html; charset=utf-8"));
               client.println();
 
               // Display the HTML web page
-              client.println("<!DOCTYPE html><html>");
-              client.println("<head><title>Room Environmental Sensor</title></head>");
+              client.println(F("<!DOCTYPE html><html>"));
+              client.println(F("<head><title>Room Environmental Sensor</title></head>"));
 
               // Web Page Heading
-              client.println("<body><h1>Room Environmental Sensor</h1><p><a href=\"/metrics\">Metrics</a></p>");
-              client.println("</body></html>");
+              client.println(F("<body><h1>Room Environmental Sensor</h1><p><a href=\"/metrics\">Metrics</a></p>"));
+              client.println(F("</body></html>"));
 
               // The HTTP response ends with another blank line
               client.println();
